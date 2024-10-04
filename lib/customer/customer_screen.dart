@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_database/firebase_database.dart';
 import 'dart:convert';
 import '../auth/auth_service.dart';
 import '../models/ride.dart';
@@ -17,15 +18,30 @@ class CustomerScreen extends StatefulWidget {
 class _CustomerScreenState extends State<CustomerScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   final MapController _mapController = MapController();
+  final DatabaseReference _database = FirebaseDatabase.instance.ref();
   LatLng? _currentLocation;
   LatLng? _destinationLocation;
   bool _isLoading = false;
   List<LatLng> _routePoints = [];
+  Map<String, dynamic> _driverLocations = {};
+  String? _destinationName;
 
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
+    _listenToDriverLocations();
+  }
+
+  void _listenToDriverLocations() {
+    _database.child('driver_locations').onValue.listen((event) {
+      if (event.snapshot.value != null) {
+        setState(() {
+          _driverLocations =
+              Map<String, dynamic>.from(event.snapshot.value as Map);
+        });
+      }
+    });
   }
 
   Future<void> _getCurrentLocation() async {
@@ -44,6 +60,21 @@ class _CustomerScreenState extends State<CustomerScreen> {
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  Future<String?> _getLocationName(LatLng location) async {
+    final url =
+        'https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.latitude}&lon=${location.longitude}&zoom=18&addressdetails=1';
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['display_name'];
+      }
+    } catch (e) {
+      print('Error fetching location name: $e');
+    }
+    return null;
   }
 
   @override
@@ -106,6 +137,8 @@ class _CustomerScreenState extends State<CustomerScreen> {
                             'Destination',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
+                          SizedBox(height: 8),
+                          Text(_destinationName ?? 'Loading...'),
                           SizedBox(height: 8),
                           Text(
                             '${_destinationLocation!.latitude.toStringAsFixed(4)}, ${_destinationLocation!.longitude.toStringAsFixed(4)}',
@@ -171,16 +204,60 @@ class _CustomerScreenState extends State<CustomerScreen> {
         child: Icon(Icons.flag, color: Colors.red, size: 40),
       ));
     }
+
+    _driverLocations.forEach((driverId, locationData) {
+      LatLng driverLocation = LatLng(
+        locationData['latitude'] as double,
+        locationData['longitude'] as double,
+      );
+      markers.add(Marker(
+        width: 80.0,
+        height: 80.0,
+        point: driverLocation,
+        child: GestureDetector(
+          onTap: () => _showDriverInfo(driverId, locationData),
+          child: Icon(Icons.local_taxi, color: Colors.green, size: 40),
+        ),
+      ));
+    });
+
     return markers;
+  }
+
+  void _showDriverInfo(String driverId, Map<String, dynamic> locationData) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Driver Information'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Driver ID: $driverId'),
+            Text('Location: ${locationData['location_name'] ?? 'Unknown'}'),
+            Text(
+                'Last Updated: ${DateTime.fromMillisecondsSinceEpoch(locationData['timestamp'] as int).toString()}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            child: Text('Close'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
   }
 
   void _handleMapTap(TapPosition tapPosition, LatLng point) async {
     setState(() {
       _destinationLocation = point;
       _isLoading = true;
+      _destinationName = null;
     });
 
     try {
+      _destinationName = await _getLocationName(point);
       List<LatLng> route =
           await MapService.getRoute(_currentLocation!, _destinationLocation!);
       setState(() {
