@@ -7,7 +7,7 @@ Shortest Route finder using Dijkstra Algorithm.
 Provider Architecture
 Admin Panel in flutter
 
-<!-- Resize images using HTML -->
+
 <img src="https://github.com/user-attachments/assets/0f451e9e-f8ef-4799-80f5-6dcda27efecc" alt="Image1" width="300"/>
 <img src="https://github.com/user-attachments/assets/26c0478c-3c55-42d5-be66-96efc4e1dce4" alt="Image2" width="300"/>
 <img src="https://github.com/user-attachments/assets/b4f25fa0-93f7-4c8e-b158-dbf3725872dd" alt="Image3" width="300"/>
