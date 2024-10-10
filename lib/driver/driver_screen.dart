@@ -150,9 +150,7 @@ class _DriverScreenState extends State<DriverScreen> {
             SizedBox(height: 20),
             ElevatedButton(
               child: Text('Logout'),
-              onPressed: () {
-                context.read<AuthService>().signOut();
-              },
+              onPressed: () => context.read<AuthService>().signOut(),
             ),
           ],
         ),
