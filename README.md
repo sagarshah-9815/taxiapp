@@ -1,19 +1,11 @@
 # taxiapp
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Made using OpenstreetMap as a map service and Firebase as authenticating and Database service.
+Realtime locaton of drivers.
+Fare calculation
+Shortest Route finder using Dijkstra Algorithm.
+Provider Architecture
+Admin Panel in flutter
 
 <!-- Resize images using HTML -->
 <img src="https://github.com/user-attachments/assets/0f451e9e-f8ef-4799-80f5-6dcda27efecc" alt="Image1" width="300"/>
